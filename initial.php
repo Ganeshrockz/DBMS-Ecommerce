@@ -1,4 +1,95 @@
+<?php
+$con=mysqli_connect('127.0.0.1','root','');
+if(!$con)
+{
+echo  "Not connected to server";
+}
+if(!mysqli_select_db($con,'ecommerce'))
+{
+    echo "Not connected to db";
+}
+session_start();
+if(isset($_POST['ssubmit']))
+{
+    $usname=$_POST['susername'];
+    $pass=$_POST['spassword'];
+    $fname=$_POST['sfirstname'];
+    $lname=$_POST['slastname'];
+    $gen=$_POST['sgender'];
+    $dob=$_POST['sdateofbirth'];
+    $add=$_POST['saddress'];
+    $city=$_POST['scity'];
+    $state=$_POST['sstate'];
+    $zip=$_POST['szipcode'];
+    $phone=$_POST['sphonenumber'];
+    $email=$_POST['semailid'];
+    $que1="SELECT * FROM customer where username='$usname'";
+    $rec=mysqli_query($con,$que1);
+    if(!$rec)
+    {
+        echo "Error";
+    }
+    else if(mysqli_num_rows($rec)>0)
+    {
+        $msg="Username Already Exists....Choose a different one";
+        echo "<script type='text/javascript'>alert('$msg');</script>";
+        mysqli_free_result($rec);
+    }
+    else
+    {
+    $query="INSERT INTO customer VALUES('$usname','$pass','$fname','$lname','$gen','$dob','$add','$city','$state','$zip','$phone','$email')";
+    $record=mysqli_query($con,$query);
+    if(!$record)
+    {
+        echo "Error";
+    }
+    else
+    {
+        require_once("C:\php\PHPMailer-PHPMailer-adb0197\class.phpmailer.php");
+    $mail=new PHPMailer();
+    $mail->IsSMTP();
+    $mail->SMTPDebug=1;
+    $mail->SMTPAuth=true;
+    $mail->SMTPSecure='ssl';
+    $mail->Host="smtp.gmail.com";
+    $mail->Port=465;
+    $mail->isHTML(true);
+    $mail->Username="ganesh890370@gmail.com";
+    $mail->Password="9486428529";
+    $mail->SetFrom("ganesh890370@gmail.com");
+    $mail->Subject="TestMail";
+    $mail->Body="Hi you have registered";
+    $mail->AddAddress($email);
+    if(!$mail->Send())
+        echo "Error".$mail->ErrorInfo;
+    $msg1="Successfully Registered";
+    echo "<script type='text/javascript'>alert('$msg1');</script>";
+    header("refresh=1;Location: initial.php");
+    }
+    }
+}
+else if(isset($_POST['submit']))
+{
 
+    $name=$_POST['uname'];
+    $pass=$_POST['psw'];
+$sql="SELECT * FROM customer WHERE username LIKE '$name' AND password='$pass'";
+$rec=mysqli_query($con,$sql);
+if(mysqli_num_rows($rec)<=0 || !$rec)
+{
+  
+  $message = "Invalid username or password";
+  echo "<script type='text/javascript'>alert('$message');</script>";
+  mysqli_free_result($rec);
+ header("refresh=1;Location: initial.php");
+}
+else
+{
+    $_SESSION["currentuser"]=$_POST['uname'];
+    header("Location: dashboard.php");
+}
+}
+?>
 <!DOCTYPE html>
 <html>
 
@@ -131,7 +222,7 @@ span.psw {
 </style>
 <body>
 
-<h2>Modal Login Form</h2>
+<h2>Ecommerce</h2>
 
 <button onclick="document.getElementById('id01').style.display='block'" style="width:auto;">Login</button>
 <button onclick="document.getElementById('id02').style.display='block'" style="width:auto;">Sign Up</button>
@@ -162,11 +253,10 @@ span.psw {
 </div>
 <div id="id02" class="modal">
   <span onclick="document.getElementById('id02').style.display='none'" class="close" title="Close Modal">&times;</span>
-  <form class="modal-content animate" action="#">
+  <form class="modal-content animate" action="initial.php" method="post">
     <div class="container">
       <label><b>Username</b></label>
       <input type="text" placeholder="Enter Username" name="susername" required>
-
       <label><b>Password</b></label>
       <input type="password" placeholder="Enter Password" name="spassword" required>
             <label><b>FirstName</b></label>
@@ -183,23 +273,22 @@ span.psw {
       <input type="text" placeholder="Enter City" name="scity" required>
             <label><b>State</b></label>
       <input type="text" placeholder="Enter State" name="sstate" required>
-            <label><b>Zip</b></label>
-      <input type="text" placeholder="Enter ZipCode" name="szipcode" required>
-            <label><b>PhoneNumber</b></label>
-      <input type="text" placeholder="Enter Phonenumber" name="sphonenumber" required>
+            <label><b>Zip</b></label><br>
+      <input type="number" placeholder="Enter ZipCode" name="szipcode" required><br>
+            <label><b>PhoneNumber</b></label><br>
+      <input type="number" placeholder="Enter Phonenumber" name="sphonenumber" required><br>
             <label><b>Email-Id</b></label>
       <input type="text" placeholder="Enter EmailId" name="semailid" required>
       <p>By creating an account you agree to our <a href="#">Terms & Privacy</a>.</p>
       <div class="clearfix">
         <button type="button" onclick="document.getElementById('id02').style.display='none'" class="cancelbtn1">Cancel</button>
-        <button type="submit" class="signupbtn">Sign Up</button>
+        <button type="submit" name="ssubmit" id="ssubmit" class="signupbtn">Sign Up</button>
       </div>
     </div>
   </form>
 </div>
 
 <script>
-// Get the modal
 var modal = document.getElementById('id01');
 
 // When the user clicks anywhere outside of the modal, close it
@@ -220,36 +309,3 @@ window.onclick = function(event) {
 
 </body>
 </html>
-<?php
-$con=mysqli_connect('127.0.0.1','root','');
-if(!$con)
-{
-echo  "Not connected to server";
-}
-if(!mysqli_select_db($con,'ecommerce'))
-{
-    echo "Not connected to db";
-}
-//$name='';
-//$pass='';
-if(isset($_POST['submit']))
-{
-
-    $name=$_POST['uname'];
-    $pass=$_POST['psw'];
-$sql="SELECT * FROM customer WHERE username LIKE '$name' AND password='$pass'";
-$rec=mysqli_query($con,$sql);
-if(mysqli_num_rows($rec)<=0 || !$rec)
-{
-  
-  $message = "Invalid username or password";
-  echo "<script type='text/javascript'>alert('$message');</script>";
-  mysqli_free_result($rec);
-  header("refresh:1; url=initial.php");
-}
-else
-{
-    header("Location: dashboard.php");
-}
-}
-?>
